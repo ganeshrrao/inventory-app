@@ -1,0 +1,88 @@
+# ── docker-compose.yml ─────────────────────────────────────────────────────────
+# Runs the full stack locally: PostgreSQL → Backend → Frontend
+#
+# KEY networking concept:
+#   Each container has its own network namespace.  "localhost" inside a
+#   container means THAT container, not your host machine.  Compose creates a
+#   private bridge network and registers each service by name as a DNS hostname.
+#   So the backend container reaches PostgreSQL as "postgres:5432".
+# ──────────────────────────────────────────────────────────────────────────────
+
+services:
+
+  # ── PostgreSQL ───────────────────────────────────────────────────────────────
+  # "postgres:16-alpine" is the official PostgreSQL 16 image on Alpine Linux.
+  # Alpine keeps it small (~240 MB vs ~400 MB for the Debian variant).
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER:     inventory
+      POSTGRES_PASSWORD: inventory
+      POSTGRES_DB:       inventory
+    volumes:
+      # Named volume: PostgreSQL stores data here.  Unlike a bind mount, Docker
+      # manages this volume entirely — data survives container restarts and even
+      # "docker compose down".  Only "docker compose down -v" deletes it.
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      # pg_isready checks if PostgreSQL is accepting connections.
+      # The backend depends on this passing before it starts.
+      test: ["CMD-SHELL", "pg_isready -U inventory -d inventory"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+      start_period: 10s
+
+  # ── Backend (FastAPI + uvicorn) ──────────────────────────────────────────────
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    ports:
+      - "8000:8000"
+    volumes:
+      # Bind mount: file saves on your host appear instantly inside the
+      # container.  Combined with uvicorn --reload, the server restarts
+      # automatically when you edit a Python file — no rebuild needed.
+      - ./backend:/app
+    env_file:
+      - ./backend/.env
+    environment:
+      # Override DATABASE_URL to point at the postgres service above.
+      # "postgres" resolves via Docker Compose's internal DNS.
+      # This overrides any DATABASE_URL value in .env for Docker runs.
+      DATABASE_URL: postgresql://inventory:inventory@postgres:5432/inventory
+    depends_on:
+      postgres:
+        # Wait for PostgreSQL to be ready before starting uvicorn.
+        # Without this, the app may crash on startup if PG isn't ready yet.
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/api/dashboard/summary')"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+      start_period: 15s
+
+  # ── Frontend (Vite dev server) ───────────────────────────────────────────────
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    ports:
+      - "5173:5173"
+    volumes:
+      - ./frontend/src:/app/src
+      # Anonymous volume prevents host's node_modules (Windows binaries) from
+      # shadowing the container's correct Linux node_modules.
+      - /app/node_modules
+    environment:
+      VITE_BACKEND_HOST: http://backend:8000
+    depends_on:
+      backend:
+        condition: service_healthy
+
+volumes:
+  # Docker manages this volume.  Data persists across restarts.
+  # To wipe the database: docker compose down -v
+  postgres_data:

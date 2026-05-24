@@ -1,0 +1,33 @@
+# .dockerignore — like .gitignore but for Docker's build context.
+#
+# When you run "docker build", Docker packages the entire build directory and
+# sends it to the Docker daemon before running any instructions.  This is called
+# the "build context."  Large or unnecessary files in the context slow down
+# every build.  .dockerignore tells Docker what to leave out.
+
+# Python virtual environment — the container installs its own packages via pip.
+# The venv is built for Windows; the container runs Linux.  Never copy it over.
+venv/
+.venv/
+
+# Compiled Python bytecode — always regenerated, never needed in the image.
+__pycache__/
+*.pyc
+*.pyo
+
+# The local .env file contains secrets (API keys, SECRET_KEY).
+# We pass these at runtime via docker-compose env_file, NOT bake them into
+# the image.  An image pushed to a registry is public; secrets must not be in it.
+.env
+
+# The SQLite database file.  The container will create a fresh one on startup
+# (or use the one from the mounted volume).  Including a dev db in the image
+# would ship stale/test data to every environment.
+*.db
+
+# Pytest artifacts — not needed at runtime.
+.pytest_cache/
+
+# One-off test scripts (test_amazon.py, test_barcode.py, etc.)
+test_*.py
+_test_*.jpg

@@ -1,0 +1,11 @@
+# node_modules is installed fresh by "npm ci" inside the container.
+# The host's node_modules is built for Windows; the container runs Linux.
+# Copying it would override the correct Linux binaries with broken Windows ones.
+node_modules/
+
+# Production build output — not needed for the dev server image.
+dist/
+
+# Local env overrides — passed at runtime via docker-compose, not baked in.
+.env
+.env.local

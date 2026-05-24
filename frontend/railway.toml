@@ -1,0 +1,15 @@
+[build]
+builder = "nixpacks"
+# Vite compiles React + assets into the dist/ folder.
+# VITE_API_URL must be set in Railway's environment variables BEFORE building —
+# Vite bakes the value into the JS bundle at build time (not runtime).
+buildCommand = "npm install && npm run build"
+
+[deploy]
+# Serve the compiled static files.
+# -s (single-page app): all paths redirect to index.html so React Router works.
+# $PORT is injected by Railway — we must listen on it.
+startCommand = "npx serve -s dist -l $PORT"
+healthcheckPath = "/"
+healthcheckTimeout = 30
+restartPolicyType = "on_failure"

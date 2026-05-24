@@ -1,0 +1,17 @@
+{
+  "name": "barcode_helper",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "dependencies": {
+    "@zxing/library": "^0.23.0",
+    "jimp": "^1.6.1"
+  }
+}

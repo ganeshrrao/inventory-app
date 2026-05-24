@@ -1,0 +1,17 @@
+[build]
+# nixpacks auto-detects Python, reads requirements.txt, and installs packages.
+# No Dockerfile needed — Railway handles the container build.
+builder = "nixpacks"
+
+[deploy]
+# Railway injects $PORT — we must bind to it or health checks fail.
+startCommand = "uvicorn main:app --host 0.0.0.0 --port $PORT"
+
+# Railway hits this path after deploy to confirm the app is alive.
+# If it returns non-2xx after healthcheckTimeout, Railway rolls back.
+healthcheckPath = "/api/dashboard/summary"
+healthcheckTimeout = 60
+
+# Restart on crash (up to 3 times before Railway gives up and alerts you).
+restartPolicyType = "on_failure"
+restartPolicyMaxRetries = 3

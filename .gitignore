@@ -1,0 +1,37 @@
+# Python
+venv/
+__pycache__/
+*.pyc
+*.pyo
+.pytest_cache/
+*.egg-info/
+
+# Database
+*.db
+*.db-shm
+*.db-wal
+
+# Environment
+.env
+.env.*
+!.env.example
+
+# Uploads (dev receipts — not source code)
+backend/uploads/*.jpg
+backend/uploads/*.png
+backend/uploads/*.jpeg
+
+# Frontend build output
+frontend/dist/
+frontend/.vite/
+
+# Node
+node_modules/
+backend/barcode_helper/node_modules/
+
+# Generated diagrams
+*.html
+
+# macOS / Windows
+.DS_Store
+Thumbs.db
