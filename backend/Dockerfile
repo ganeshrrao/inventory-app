@@ -45,4 +45,4 @@ EXPOSE 8000
 #                    Without this, uvicorn binds to 127.0.0.1 (loopback only)
 #                    and is unreachable from outside the container.
 # --reload        — watch source files and restart on changes (dev only).
-CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
+CMD ["/bin/sh", "-c", "uvicorn main:app --host 0.0.0.0 --port ${PORT:-8000}"]
